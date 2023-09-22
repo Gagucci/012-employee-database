@@ -17,6 +17,7 @@
   },
   "homepage": "https://github.com/Gagucci/012-employee-database#readme",
   "dependencies": {
+    "dotenv": "^16.3.1",
     "inquirer": "^8.2.4",
     "mysql2": "^3.6.1"
   }
