@@ -90,7 +90,9 @@ function viewDepartments() {
 };
 
 function addEmployee() {
+    // query to retrieve all data from role and employee tables
     db.query(`SELECT * FROM role`, (err, roles) => {
+        // async function to ensure that the employee table is queried before the inquirer prompt
         db.query(`SELECT * FROM employee`, async (err, employee) => {
             const responses = await inquirer.prompt([
                 {
@@ -126,25 +128,78 @@ function addEmployee() {
                     message: 'Who is the employees manager?',
                 },
             ]).then((answers) => {
+                // variable to hold the schema for the query
                 const schema = `INSERT INTO employee (first_name, last_name, role_id, manager_id) VALUES (?, ?, ?, ?)`;
+                // variable to hold the answers from the inquirer prompt
                 const params = [answers.first_name, answers.last_name, answers.role_id, answers.manager_id];
+                // query to insert the new employee into the employee table
                 db.query(schema, params, (err, res) => {
                     if (err) { console.log(err) };
                     console.log('Employee added!');
                     startMenu();
                 })
             })
-
-            //console.log(responses);
-
         })
     })
 }
 
 function addDepartment() {
-
+    // inquirer prompt to get the name of the new department
+    inquirer.prompt([
+        {
+            type: 'input',
+            name: 'departmentName',
+            message: 'What is the name of the new department?',
+        }
+    ])
+        // promise to insert the new department into the department table
+        .then((answer) => {
+            const schema = `INSERT INTO department (name) VALUES (?)`;
+            const params = [answer.departmentName];
+            db.query(schema, params, (err, res) => {
+                if (err) { console.log(err) };
+                console.log('Department added!');
+                startMenu();
+            });
+        });
 }
 
 function addRole() {
-
+    // query to retrieve all data from department table
+    db.query(`SELECT * FROM department`, async (err, department) => {
+        // async function to ensure that the department table is queried before the inquirer prompt
+        const responses = await inquirer.prompt([
+            {
+                type: 'input',
+                name: 'name',
+                message: 'What is the name of the new role?',
+            },
+            {
+                type: 'input',
+                name: 'salary',
+                message: 'What is the salary for this role?',
+            },
+            {
+                type: 'list',
+                name: 'department_id',
+                choices: department.map(department => {
+                    return {
+                        name: department.name,
+                        value: department.id
+                    }
+                }),
+                message: 'What department does this role belong to?',
+            },
+        ])
+            // promise to insert the new role into the role table
+            .then((answers) => {
+                const schema = `INSERT INTO role (title, salary, department_id) VALUES (?, ?, ?)`;
+                const params = [answers.name, answers.salary, answers.department_id];
+                db.query(schema, params, (err, res) => {
+                    if (err) { console.log(err) };
+                    console.log('Role added!');
+                    startMenu();
+                })
+            })
+    });
 }
