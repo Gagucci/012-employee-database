@@ -16,6 +16,7 @@ function startMenu() {
                 'Add new Employee',
                 'Add new Role',
                 'Add new Department',
+                'Update Employee Role',
                 'Exit',
             ]
         }
@@ -38,6 +39,9 @@ function startMenu() {
                 break;
             case 'Add new Department':
                 addDepartment();
+                break;
+            case 'Update Employee Role':
+                updateEmployeeRole();
                 break;
             case 'Exit':
                 console.log('Logging out...');
@@ -201,5 +205,45 @@ function addRole() {
                     startMenu();
                 })
             })
+    });
+}
+
+function updateEmployeeRole() {
+    db.query(`SELECT * FROM role`, (err, role) => {
+        db.query(`SELECT * FROM employee`, async (err, employee) => {
+            const responses = await inquirer.prompt([
+                {
+                    type: 'list',
+                    name: 'employee_id',
+                    choices: employee.map(employee => {
+                        return {
+                            name: `${employee.first_name} ${employee.last_name}`,
+                            value: employee.id
+                        }
+                    }),
+                    message: 'Which employees role would you like to update?',
+                },
+                {
+                    type: 'list',
+                    name: 'role_id',
+                    choices: role.map(role => {
+                        return {
+                            name: role.title,
+                            value: role.id
+                        }
+                    }),
+                    message: 'What is the employees new role?',
+                },
+            ])
+                .then((answers) => {
+                    const schema = `UPDATE employee SET role_id = ? WHERE id = ?`;
+                    const params = [answers.role_id, answers.employee_id];
+                    db.query(schema, params, (err, res) => {
+                        if (err) { console.log(err) };
+                        console.log(`Employee role updated!`);
+                        startMenu();
+                    });
+                });
+        });
     });
 }
